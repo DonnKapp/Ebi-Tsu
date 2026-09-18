@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { SiteShell } from "./components/SiteShell";
@@ -14,7 +14,7 @@ const caridinaImage = "/assets/ebi-tsu-caridina.png";
 function Router() {
   const [location] = useLocation();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [location]);
 

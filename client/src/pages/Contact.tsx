@@ -44,10 +44,10 @@ export default function Contact() {
           <div className="contact-form-wrap">
             {submitted && <div className="form-notice" role="status">Your email client should open with the inquiry prepared. Thank you for reaching out.</div>}
             <form className="contact-form" onSubmit={handleSubmit}>
-              <div className="form-row"><label>Name<input required name="name" autoComplete="name" /></label><label>Phone number<input type="tel" name="phone" autoComplete="tel" /></label></div>
-              <label>Email address<input required type="email" name="email" autoComplete="email" /></label>
-              <label>How can we help?<select required name="inquiry" defaultValue=""><option value="" disabled>Select an inquiry</option>{inquiryOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
-              <label>Tell us a little more<textarea required name="message" rows={5} placeholder="How can we help?" /></label>
+              <div className="form-row"><label>Name *<input required name="name" autoComplete="name" /></label><label>Phone number<input type="tel" name="phone" autoComplete="tel" /></label></div>
+              <label>Email address *<input required type="email" name="email" autoComplete="email" /></label>
+              <label>How can we help? *<select required name="inquiry" defaultValue=""><option value="" disabled>Select an inquiry</option>{inquiryOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
+              <label>Tell us a little more *<textarea required name="message" rows={5} placeholder="How can we help?" /></label>
               <button className="form-submit" type="submit">Prepare inquiry <Send size={16} /></button>
             </form>
             <p className="form-note">This form opens your default email application with your message prepared for Ebi Tsū.</p>
