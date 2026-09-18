@@ -51,3 +51,26 @@
   .collection-card__bottom h3 { font-size: clamp(46px, 12vw, 60px); }
   .collection-card__bottom span { color: var(--water); text-shadow: none; }
 }
+
+@media (max-width: 800px) {
+  .collection-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 430px;
+    padding: 24px;
+  }
+  .collection-card__top,
+  .collection-card__bottom {
+    position: relative;
+    inset: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+  }
+  .collection-card__top { align-items: flex-start; }
+  .collection-card__bottom { display: block; margin-top: auto; padding-top: 120px; }
+  .collection-card__bottom h3 { margin: 0; }
+  .collection-card__bottom span { display: inline-block; margin-top: 20px; }
+}
