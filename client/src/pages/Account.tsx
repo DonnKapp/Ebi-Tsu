@@ -77,7 +77,18 @@ export default function Account() {
   async function saveProfile(userId = user?.id, quiet = false) {
     if (!userId) return;
     setProfileBusy(true); setError(""); if (!quiet) setMessage("");
-    const { error: saveError } = await supabase.from("profiles").upsert({ id: userId, ...profile, updated_at: new Date().toISOString() });
+    const { error: saveError } = await supabase.from("profiles").update({
+      full_name: profile.full_name,
+      phone: profile.phone || null,
+      address_line_1: profile.address_line_1 || null,
+      address_line_2: profile.address_line_2 || null,
+      city: profile.city || null,
+      state_region: profile.state_region || null,
+      postal_code: profile.postal_code || null,
+      country: profile.country || "United States",
+      marketing_opt_in: profile.marketing_opt_in,
+      updated_at: new Date().toISOString(),
+    }).eq("id", userId);
     if (saveError) setError(saveError.message); else if (!quiet) setMessage("Your profile has been saved.");
     setProfileBusy(false);
   }
