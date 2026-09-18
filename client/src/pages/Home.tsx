@@ -12,7 +12,8 @@ export default function Home() {
   function openCollection(event: MouseEvent<HTMLAnchorElement>, path: string) {
     event.preventDefault();
     window.history.scrollRestoration = "manual";
-    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
     navigate(path);
   }
 
