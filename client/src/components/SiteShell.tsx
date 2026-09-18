@@ -10,6 +10,7 @@ const navItems = [
   { label: "Neocaridina", href: "/neocaridina" },
   { label: "Caridina", href: "/caridina" },
   { label: "About", href: "/about" },
+  { label: "Account", href: "/account" },
 ];
 
 export function SiteShell({ children }: SiteShellProps) {
