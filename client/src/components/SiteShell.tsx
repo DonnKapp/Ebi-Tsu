@@ -11,6 +11,7 @@ const navItems = [
   { label: "Caridina", href: "/caridina" },
   { label: "About", href: "/about" },
   { label: "Account", href: "/account" },
+  { label: "Request livestock", href: "/livestock-request" },
 ];
 
 export function SiteShell({ children }: SiteShellProps) {

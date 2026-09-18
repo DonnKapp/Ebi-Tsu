@@ -8,6 +8,7 @@ import Account from "./pages/Account";
 import CollectionPage from "./pages/CollectionPage";
 import Contact from "./pages/Contact";
 import Home from "./pages/Home";
+import LivestockRequest from "./pages/LivestockRequest";
 import NotFound from "./pages/NotFound";
 
 const neoImage = "/assets/ebi-tsu-neocaridina.png";
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/caridina"><CollectionPage family="Caridina" image={caridinaImage} number="02" title={<>Detail in <em>the water.</em></>} intro="A more exacting study of translucency, pattern, and the small shifts in tone that reveal a shrimp’s character." details="A study in nuance, pattern, and the calm precision of a well-kept environment." /></Route>
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
+      <Route path="/livestock-request" component={LivestockRequest} />
       <Route path="/account" component={Account} />
       <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
