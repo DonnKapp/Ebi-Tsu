@@ -34,8 +34,8 @@ export default function Contact() {
     const { error: insertError } = await supabase.from("inquiries").insert({ user_id: user.id, name, email, phone: phone || null, inquiry_type: inquiry, message });
     if (insertError) { setError("We couldn’t save your inquiry. Please try again."); setBusy(false); return; }
 
-    const { error: emailError } = await supabase.functions.invoke("send-inquiry-email", { body: { name, email, phone, inquiryType: inquiry, message } });
-    if (emailError) {
+    const { data: emailData, error: emailError } = await supabase.functions.invoke("send-inquiry-email", { body: { name, email, phone, inquiryType: inquiry, message } });
+    if (emailError || !emailData?.sent) {
       setError("Your inquiry was saved to your account, but we couldn’t complete email delivery yet. Please try again shortly.");
       setBusy(false);
       return;
@@ -43,6 +43,7 @@ export default function Contact() {
 
     formElement.reset();
     setSubmitted(true);
+    if (!emailData.confirmationSent) setError("Your inquiry was sent to Ebi Tsū, but the confirmation email could not be delivered.");
     setBusy(false);
   }
 
