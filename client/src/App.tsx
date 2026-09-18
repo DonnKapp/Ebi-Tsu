@@ -3,6 +3,7 @@ import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { SiteShell } from "./components/SiteShell";
 import About from "./pages/About";
+import Admin from "./pages/Admin";
 import Account from "./pages/Account";
 import CollectionPage from "./pages/CollectionPage";
 import Contact from "./pages/Contact";
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
       <Route path="/account" component={Account} />
+      <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
