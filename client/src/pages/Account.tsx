@@ -5,101 +5,28 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 type Mode = "login" | "signup" | "reset";
-type Profile = {
-  role: "customer" | "admin";
-  full_name: string;
-  phone: string;
-  address_line_1: string;
-  address_line_2: string;
-  city: string;
-  state_region: string;
-  postal_code: string;
-  country: string;
-  marketing_opt_in: boolean;
-};
-
+type Profile = { role: "customer" | "admin"; full_name: string; phone: string; address_line_1: string; address_line_2: string; city: string; state_region: string; postal_code: string; country: string; marketing_opt_in: boolean; };
+type Inquiry = { id: string; inquiry_type: string; message: string; status: "new" | "in_progress" | "responded" | "closed"; created_at: string; };
+type LivestockRequest = { id: string; species: "neocaridina" | "caridina" | "either" | "not_sure"; quantity: number | null; shipping_location: string | null; preferred_line: string | null; timeframe: string | null; notes: string | null; status: "new" | "reviewing" | "quoted" | "fulfilled" | "closed"; created_at: string; };
 const emptyProfile: Profile = { role: "customer", full_name: "", phone: "", address_line_1: "", address_line_2: "", city: "", state_region: "", postal_code: "", country: "United States", marketing_opt_in: false };
+const inquiryStatusLabels: Record<Inquiry["status"], string> = { new: "Received", in_progress: "In review", responded: "Response available", closed: "Complete" };
+const requestStatusLabels: Record<LivestockRequest["status"], string> = { new: "Received", reviewing: "Under review", quoted: "Response available", fulfilled: "Complete", closed: "Closed" };
+function formatDate(value: string) { return new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); }
+function titleCase(value: string) { return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
 
 export default function Account() {
-  const [mode, setMode] = useState<Mode>("login");
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile>(emptyProfile);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [profileBusy, setProfileBusy] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!mounted || !data.user) return;
-      setUser(data.user);
-      setEmail(data.user.email ?? "");
-      await loadProfile(data.user.id);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) setUser(session?.user ?? null);
-    });
-    return () => { mounted = false; listener.subscription.unsubscribe(); };
-  }, []);
-
-  async function loadProfile(userId: string) {
-    const { data, error: profileError } = await supabase.from("profiles").select("role, full_name, phone, address_line_1, address_line_2, city, state_region, postal_code, country, marketing_opt_in").eq("id", userId).maybeSingle();
-    if (profileError) { setError(profileError.message); return; }
-    if (data) setProfile({ ...emptyProfile, ...data });
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setMessage(""); setError("");
-    try {
-      if (mode === "reset") {
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/account` });
-        if (resetError) throw resetError;
-        setMessage("If an account exists for that email, a password-reset link is on its way.");
-      } else if (mode === "signup") {
-        const { data, error: signupError } = await supabase.auth.signUp({ email, password, options: { data: { full_name: profile.full_name } } });
-        if (signupError) throw signupError;
-        setUser(data.user);
-        if (data.user && data.session) await saveProfile(data.user.id, true);
-        setMessage(data.session ? "Your account is ready. Complete your profile below." : "Your account is created. Check your email to verify it, then return here to log in.");
-      } else {
-        const { data, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-        if (loginError) throw loginError;
-        setUser(data.user);
-        if (data.user) await loadProfile(data.user.id);
-        setMessage("Welcome back to Ebi Tsū.");
-      }
-    } catch (submitError) { setError(submitError instanceof Error ? submitError.message : "We could not complete that request."); }
-    finally { setBusy(false); }
-  }
-
-  async function saveProfile(userId = user?.id, quiet = false) {
-    if (!userId) return;
-    setProfileBusy(true); setError(""); if (!quiet) setMessage("");
-    const { error: saveError } = await supabase.from("profiles").update({
-      full_name: profile.full_name,
-      phone: profile.phone || null,
-      address_line_1: profile.address_line_1 || null,
-      address_line_2: profile.address_line_2 || null,
-      city: profile.city || null,
-      state_region: profile.state_region || null,
-      postal_code: profile.postal_code || null,
-      country: profile.country || "United States",
-      marketing_opt_in: profile.marketing_opt_in,
-      updated_at: new Date().toISOString(),
-    }).eq("id", userId);
-    if (saveError) setError(saveError.message); else if (!quiet) setMessage("Your profile has been saved.");
-    setProfileBusy(false);
-  }
-
+  const [mode, setMode] = useState<Mode>("login"); const [user, setUser] = useState<User | null>(null); const [profile, setProfile] = useState<Profile>(emptyProfile); const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [showPassword, setShowPassword] = useState(false); const [message, setMessage] = useState(""); const [error, setError] = useState(""); const [busy, setBusy] = useState(false); const [profileBusy, setProfileBusy] = useState(false); const [inquiries, setInquiries] = useState<Inquiry[]>([]); const [livestockRequests, setLivestockRequests] = useState<LivestockRequest[]>([]); const [activityBusy, setActivityBusy] = useState(false); const [activityError, setActivityError] = useState("");
+  useEffect(() => { let mounted = true; supabase.auth.getUser().then(async ({ data }) => { if (!mounted || !data.user) return; setUser(data.user); setEmail(data.user.email ?? ""); await loadProfile(data.user.id); }); const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => { if (mounted) setUser(session?.user ?? null); }); return () => { mounted = false; listener.subscription.unsubscribe(); }; }, []);
+  useEffect(() => { if (user) void loadActivity(user.id); else { setInquiries([]); setLivestockRequests([]); } }, [user]);
+  async function loadProfile(userId: string) { const { data, error: profileError } = await supabase.from("profiles").select("role, full_name, phone, address_line_1, address_line_2, city, state_region, postal_code, country, marketing_opt_in").eq("id", userId).maybeSingle(); if (profileError) { setError(profileError.message); return; } if (data) setProfile({ ...emptyProfile, ...data }); }
+  async function loadActivity(userId: string) { setActivityBusy(true); setActivityError(""); const [{ data: inquiryData, error: inquiryError }, { data: requestData, error: requestError }] = await Promise.all([supabase.from("inquiries").select("id, inquiry_type, message, status, created_at").eq("user_id", userId).order("created_at", { ascending: false }), supabase.from("livestock_requests").select("id, species, quantity, shipping_location, preferred_line, timeframe, notes, status, created_at").eq("user_id", userId).order("created_at", { ascending: false })]); if (inquiryError || requestError) setActivityError(inquiryError?.message || requestError?.message || "We could not load your activity yet."); else { setInquiries((inquiryData ?? []) as Inquiry[]); setLivestockRequests((requestData ?? []) as LivestockRequest[]); } setActivityBusy(false); }
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setBusy(true); setMessage(""); setError(""); try { if (mode === "reset") { const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/account` }); if (resetError) throw resetError; setMessage("If an account exists for that email, a password-reset link is on its way."); } else if (mode === "signup") { const { data, error: signupError } = await supabase.auth.signUp({ email, password, options: { data: { full_name: profile.full_name } } }); if (signupError) throw signupError; setUser(data.user); if (data.user && data.session) await saveProfile(data.user.id, true); setMessage(data.session ? "Your account is ready. Complete your profile below." : "Your account is created. Check your email to verify it, then return here to log in."); } else { const { data, error: loginError } = await supabase.auth.signInWithPassword({ email, password }); if (loginError) throw loginError; setUser(data.user); if (data.user) await loadProfile(data.user.id); setMessage("Welcome back to Ebi Tsū."); } } catch (submitError) { setError(submitError instanceof Error ? submitError.message : "We could not complete that request."); } finally { setBusy(false); } }
+  async function saveProfile(userId = user?.id, quiet = false) { if (!userId) return; setProfileBusy(true); setError(""); if (!quiet) setMessage(""); const { error: saveError } = await supabase.from("profiles").update({ full_name: profile.full_name, phone: profile.phone || null, address_line_1: profile.address_line_1 || null, address_line_2: profile.address_line_2 || null, city: profile.city || null, state_region: profile.state_region || null, postal_code: profile.postal_code || null, country: profile.country || "United States", marketing_opt_in: profile.marketing_opt_in, updated_at: new Date().toISOString() }).eq("id", userId); if (saveError) setError(saveError.message); else if (!quiet) setMessage("Your profile has been saved."); setProfileBusy(false); }
   async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); await saveProfile(); }
   async function signOut() { await supabase.auth.signOut(); setUser(null); setProfile(emptyProfile); setEmail(""); setPassword(""); setShowPassword(false); setMessage("You have been signed out."); }
   function updateProfile(field: keyof Profile, value: string | boolean) { setProfile((current) => ({ ...current, [field]: value })); }
 
-  if (user) return <div className="account-page"><div className="page-width account-page__inner"><Link href="/" className="back-link"><ArrowLeft size={15} /> Back to Ebi Tsū</Link><div className="account-page__header account-page__header--wide"><span className="section-label"><span>04</span> Account</span><h1>Your place in<br /><em>the study.</em></h1><p>Keep your contact details connected to your Ebi Tsū conversations and future livestock requests.</p></div>{profile.role === "admin" && <div className="admin-account-panel"><div><span className="account-panel__eyebrow">Ebi Tsū administration</span><h2>Private admin workspace</h2><p>Review customer inquiries and manage conversation status.</p></div><Link href="/admin" className="button button--dark">Open admin inbox <ArrowUpRight size={15} /></Link></div>}<form className="profile-form" onSubmit={handleProfileSubmit}><div className="profile-form__heading"><div><span className="account-panel__eyebrow">Customer profile</span><h2>Your details</h2></div><button className="button button--dark" disabled={profileBusy} type="submit"><Save size={15} /> {profileBusy ? "Saving..." : "Save profile"}</button></div><div className="profile-form__grid"><label>Full name<div className="account-input"><UserRound size={16} /><input value={profile.full_name} onChange={(event) => updateProfile("full_name", event.target.value)} autoComplete="name" /></div></label><label>Email address<div className="account-input"><Mail size={16} /><input value={user.email ?? ""} readOnly type="email" /></div></label><label>Phone number<div className="account-input"><Phone size={16} /><input value={profile.phone} onChange={(event) => updateProfile("phone", event.target.value)} type="tel" autoComplete="tel" /></div></label><label>Address line 1<div className="account-input"><MapPin size={16} /><input value={profile.address_line_1} onChange={(event) => updateProfile("address_line_1", event.target.value)} autoComplete="street-address" /></div></label><label>Address line 2<div className="account-input"><MapPin size={16} /><input value={profile.address_line_2} onChange={(event) => updateProfile("address_line_2", event.target.value)} autoComplete="address-line2" /></div></label><label>City<div className="account-input"><input value={profile.city} onChange={(event) => updateProfile("city", event.target.value)} autoComplete="address-level2" /></div></label><label>State / region<div className="account-input"><input value={profile.state_region} onChange={(event) => updateProfile("state_region", event.target.value)} autoComplete="address-level1" /></div></label><label>Postal code<div className="account-input"><input value={profile.postal_code} onChange={(event) => updateProfile("postal_code", event.target.value)} autoComplete="postal-code" /></div></label><label>Country<div className="account-input"><input value={profile.country} onChange={(event) => updateProfile("country", event.target.value)} autoComplete="country-name" /></div></label></div><label className="profile-checkbox"><input type="checkbox" checked={profile.marketing_opt_in} onChange={(event) => updateProfile("marketing_opt_in", event.target.checked)} /> Keep me informed about Ebi Tsū availability and news.</label>{message && <p className="form-success">{message}</p>}{error && <p className="form-error">{error}</p>}</form><div className="account-panel account-panel--logout"><div><span className="account-panel__eyebrow">Signed in</span><p>{user.email}</p></div><button className="button button--dark" type="button" onClick={signOut}><LogOut size={15} /> Sign out</button></div></div></div>;
+  if (user) return <div className="account-page"><div className="page-width account-page__inner"><Link href="/" className="back-link"><ArrowLeft size={15} /> Back to Ebi Tsū</Link><div className="account-page__header account-page__header--wide"><span className="section-label"><span>04</span> Account</span><h1>Your place in<br /><em>the study.</em></h1><p>Keep your contact details connected to your Ebi Tsū conversations and future livestock requests.</p></div>{profile.role === "admin" && <div className="admin-account-panel"><div><span className="account-panel__eyebrow">Ebi Tsū administration</span><h2>Private admin workspace</h2><p>Review customer inquiries and manage conversation status.</p></div><Link href="/admin" className="button button--dark">Open admin inbox <ArrowUpRight size={15} /></Link></div>}<section className="account-activity"><div className="profile-form__heading"><div><span className="account-panel__eyebrow">Your Ebi Tsū activity</span><h2>Conversations & requests</h2></div><span className="account-activity__count">{inquiries.length + livestockRequests.length} total</span></div>{activityError && <p className="form-error">{activityError}</p>}{activityBusy ? <p className="account-activity__empty">Loading your activity...</p> : inquiries.length === 0 && livestockRequests.length === 0 ? <div className="account-activity__empty"><strong>Your record is still open.</strong><p>Submitted conversations and livestock requests will appear here.</p><Link href="/contact" className="text-link">Start a conversation <ArrowUpRight size={15} /></Link></div> : <div className="account-activity__list">{inquiries.map((inquiry) => <article className="account-activity-card" key={`inquiry-${inquiry.id}`}><div className="account-activity-card__top"><span className="account-activity-card__kind">Conversation · {titleCase(inquiry.inquiry_type)}</span><span>{formatDate(inquiry.created_at)}</span></div><div className="account-activity-card__body"><div><h3>{inquiry.message}</h3></div><span className="account-status">{inquiryStatusLabels[inquiry.status]}</span></div></article>)}{livestockRequests.map((request) => <article className="account-activity-card account-activity-card--request" key={`request-${request.id}`}><div className="account-activity-card__top"><span className="account-activity-card__kind">Livestock request · {titleCase(request.species)}</span><span>{formatDate(request.created_at)}</span></div><div className="account-activity-card__body"><div><h3>{request.quantity ? `${request.quantity} shrimp requested` : "Quantity not specified"}</h3><p>{request.shipping_location || "Shipping location not specified"}{request.preferred_line ? ` · ${request.preferred_line}` : ""}{request.timeframe ? ` · ${request.timeframe}` : ""}</p></div><span className="account-status">{requestStatusLabels[request.status]}</span></div></article>)}</div>}</section><form className="profile-form" onSubmit={handleProfileSubmit}><div className="profile-form__heading"><div><span className="account-panel__eyebrow">Customer profile</span><h2>Your details</h2></div><button className="button button--dark" disabled={profileBusy} type="submit"><Save size={15} /> {profileBusy ? "Saving..." : "Save profile"}</button></div><div className="profile-form__grid"><label>Full name<div className="account-input"><UserRound size={16} /><input value={profile.full_name} onChange={(event) => updateProfile("full_name", event.target.value)} autoComplete="name" /></div></label><label>Email address<div className="account-input"><Mail size={16} /><input value={user.email ?? ""} readOnly type="email" /></div></label><label>Phone number<div className="account-input"><Phone size={16} /><input value={profile.phone} onChange={(event) => updateProfile("phone", event.target.value)} type="tel" autoComplete="tel" /></div></label><label>Address line 1<div className="account-input"><MapPin size={16} /><input value={profile.address_line_1} onChange={(event) => updateProfile("address_line_1", event.target.value)} autoComplete="street-address" /></div></label><label>Address line 2<div className="account-input"><MapPin size={16} /><input value={profile.address_line_2} onChange={(event) => updateProfile("address_line_2", event.target.value)} autoComplete="address-line2" /></div></label><label>City<div className="account-input"><input value={profile.city} onChange={(event) => updateProfile("city", event.target.value)} autoComplete="address-level2" /></div></label><label>State / region<div className="account-input"><input value={profile.state_region} onChange={(event) => updateProfile("state_region", event.target.value)} autoComplete="address-level1" /></div></label><label>Postal code<div className="account-input"><input value={profile.postal_code} onChange={(event) => updateProfile("postal_code", event.target.value)} autoComplete="postal-code" /></div></label><label>Country<div className="account-input"><input value={profile.country} onChange={(event) => updateProfile("country", event.target.value)} autoComplete="country-name" /></div></label></div><label className="profile-checkbox"><input type="checkbox" checked={profile.marketing_opt_in} onChange={(event) => updateProfile("marketing_opt_in", event.target.checked)} /> Keep me informed about Ebi Tsū availability and news.</label>{message && <p className="form-success">{message}</p>}{error && <p className="form-error">{error}</p>}</form><div className="account-panel account-panel--logout"><div><span className="account-panel__eyebrow">Signed in</span><p>{user.email}</p></div><button className="button button--dark" type="button" onClick={signOut}><LogOut size={15} /> Sign out</button></div></div></div>;
 
   const isReset = mode === "reset";
   return <div className="account-page"><div className="page-width account-page__inner"><Link href="/" className="back-link"><ArrowLeft size={15} /> Back to Ebi Tsū</Link><div className="account-layout"><div className="account-page__header"><span className="section-label"><span>04</span> Ebi Tsū account</span><h1>Keep the<br /><em>conversation.</em></h1><p>Create an account now so future inquiries, livestock requests, and availability conversations can stay connected to you.</p></div><div className="account-form-panel"><div className="account-form-panel__top"><span>{isReset ? "Reset access" : mode === "signup" ? "Create account" : "Welcome back"}</span><UserRound size={18} /></div><form onSubmit={handleSubmit}>{mode === "signup" && <label>Name *<div className="account-input"><UserRound size={16} /><input required value={profile.full_name} onChange={(event) => updateProfile("full_name", event.target.value)} autoComplete="name" /></div></label>}<label>Email address *<div className="account-input"><Mail size={16} /><input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" /></div></label>{!isReset && <label>Password *<div className="account-input"><LockKeyhole size={16} /><input required minLength={8} type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "signup" ? "new-password" : "current-password"} /><button className="password-toggle" type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label>}<button className="button button--dark account-form-panel__submit" disabled={busy} type="submit">{busy ? "Working..." : isReset ? "Send reset link" : mode === "signup" ? "Create account" : "Log in"}<ArrowUpRight size={15} /></button></form>{message && <p className="form-success">{message}</p>}{error && <p className="form-error">{error}</p>}<div className="account-form-panel__links">{mode === "login" && <><button type="button" onClick={() => setMode("reset")}>Forgot password?</button><button type="button" onClick={() => setMode("signup")}>Create an account</button></>}{mode === "signup" && <button type="button" onClick={() => setMode("login")}>Already have an account? Log in</button>}{mode === "reset" && <button type="button" onClick={() => setMode("login")}>Return to log in</button>}</div></div></div></div></div>;
