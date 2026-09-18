@@ -36,3 +36,18 @@
   .site-header--light .site-nav__link--active { color: var(--ink); }
   .site-header--light .site-nav__contact { color: var(--ink); border-color: rgba(7, 17, 19, .28); }
 }
+
+@media (max-width: 800px) {
+  .intro { overflow: hidden; }
+  .intro__grid { display: flex; flex-direction: column; }
+  .intro__copy { width: 100%; max-width: none; }
+  .intro h2 { font-size: clamp(48px, 12.5vw, 64px); line-height: .94; margin-bottom: 30px; }
+  .intro__copy p { max-width: 100%; }
+  .intro__signal { margin-top: 52px; }
+  .collections { position: relative; z-index: 1; }
+  .collection-card { min-height: 430px; }
+  .collection-card__top,
+  .collection-card__bottom { color: var(--paper); text-shadow: 0 1px 12px rgba(7, 17, 19, .65); }
+  .collection-card__bottom h3 { font-size: clamp(46px, 12vw, 60px); }
+  .collection-card__bottom span { color: var(--water); text-shadow: none; }
+}
