@@ -3132,15 +3132,35 @@ button {
   transform: translateX(3px);
 }
 .about-social--icon {
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
   justify-content: center;
-  border: 1px solid var(--line);
+  border: 0;
   padding: 0;
+  border-radius: 50%;
   transform: none;
 }
 .about-social--icon:hover {
   transform: translateY(-2px);
+}
+.about-social--icon svg {
+  width: 31px;
+  height: 31px;
+}
+.about-social--youtube {
+  color: #ff0033;
+}
+.about-social--facebook {
+  color: #1877f2;
+}
+.about-social--instagram {
+  color: #e4405f;
+}
+.about-social--whatsapp {
+  color: #25d366;
+}
+.about-social--telegram {
+  color: #229ed9;
 }
 .about-social > span {
   display: flex;

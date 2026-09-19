@@ -1,16 +1,14 @@
-# Ebi Tsū Social Icons Update
+# Ebi Tsū Colorful Social Icons Update
 
-The About page now shows **only five social icons** under “Stay connected.” The platform names, handles, phone number, and arrow indicators are no longer visible.
+The About page now shows **only five larger, color-coded social icons** with no black boxes, visible labels, handles, phone number, or URL-style text.
 
-Each icon remains an accessible clickable link:
+- YouTube: red
+- Facebook: blue
+- Instagram: pink/red
+- WhatsApp: green
+- Telegram: blue
 
-- YouTube: `https://www.youtube.com/@Ebi-Tsū`
-- Facebook: `https://www.facebook.com/profile.php?id=61594344066783`
-- Instagram: `https://www.instagram.com/Ebi_Tsu/`
-- WhatsApp: `https://wa.me/18507764979`
-- Telegram: `https://t.me/Ebi_Tsu`
-
-Hovering or focusing an icon exposes its platform label through the browser tooltip/accessibility label.
+Each icon remains an accessible clickable link to the user-provided account. Hovering or focusing an icon exposes its platform label through the browser tooltip/accessibility label.
 
 ## Apply to the existing GitHub folder
 
@@ -23,6 +21,6 @@ Hovering or focusing an icon exposes its platform label through the browser tool
 ```bash
 git status
 git add -A
-git commit -m "Use icon-only social links on About page"
+git commit -m "Use colorful icon-only social links on About page"
 git push origin main
 ```

@@ -156,7 +156,7 @@ export default function About() {
                 {socials.map(({ label, detail, href, icon: Icon }) => (
                   <a
                     key={label}
-                    className="about-social about-social--icon"
+                    className={`about-social about-social--icon about-social--${label.toLowerCase()}`}
                     href={href}
                     target="_blank"
                     rel="noreferrer"
