@@ -137,6 +137,10 @@ button {
 .site-header--light .brand-lockup {
   color: var(--ink);
 }
+.site-header:not(.site-header--light) .brand-mark,
+.site-footer .brand-mark {
+  filter: invert(1);
+}
 .brand-lockup {
   display: inline-flex;
   align-items: center;
@@ -144,14 +148,16 @@ button {
   color: var(--paper);
 }
 .brand-mark {
-  width: 45px;
-  height: 45px;
-  color: var(--shell);
+  display: block;
+  width: 84px;
+  height: 48px;
+  object-fit: contain;
+  object-position: center;
   flex: none;
 }
 .brand-mark--compact {
-  width: 37px;
-  height: 37px;
+  width: 66px;
+  height: 38px;
 }
 .brand-lockup__type {
   display: flex;
@@ -181,6 +187,15 @@ button {
 }
 .brand-lockup--compact .wordmark__latin {
   font-size: 18px;
+}
+@media (max-width: 800px) {
+  .brand-lockup {
+    gap: 9px;
+  }
+  .brand-mark--compact {
+    width: 58px;
+    height: 34px;
+  }
 }
 .hero {
   position: relative;
