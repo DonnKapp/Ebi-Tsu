@@ -1,14 +1,17 @@
 # Ebi Tsū Colorful Social Icons Update
 
-The About page now shows **only five larger, color-coded social icons** with no black boxes, visible labels, handles, phone number, or URL-style text.
+The About page now shows **six larger, color-coded social icons** with no visible labels, handles, phone number, or URL-style text:
 
-- YouTube: red
-- Facebook: blue
-- Instagram: pink/red
-- WhatsApp: green
-- Telegram: blue
+- YouTube — red
+- Facebook — blue
+- Instagram — pink/red
+- WhatsApp — green
+- Telegram — blue
+- TikTok — black with cyan and pink accent treatment
 
-Each icon remains an accessible clickable link to the user-provided account. Hovering or focusing an icon exposes its platform label through the browser tooltip/accessibility label.
+Each icon remains an accessible clickable link:
+
+- TikTok: `https://www.tiktok.com/@ebi.tsu`
 
 ## Apply to the existing GitHub folder
 
@@ -21,6 +24,6 @@ Each icon remains an accessible clickable link to the user-provided account. Hov
 ```bash
 git status
 git add -A
-git commit -m "Use colorful icon-only social links on About page"
+git commit -m "Add TikTok to Ebi Tsu social icons"
 git push origin main
 ```

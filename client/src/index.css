@@ -3110,7 +3110,7 @@ button {
 }
 .about-socials__grid {
   display: grid;
-  grid-template-columns: repeat(5, 42px);
+  grid-template-columns: repeat(6, 46px);
   gap: 12px;
 }
 .about-social {
@@ -3162,6 +3162,9 @@ button {
 .about-social--telegram {
   color: #229ed9;
 }
+.about-social--tiktok {
+  color: #111111;
+}
 .about-social > span {
   display: flex;
   min-width: 0;
@@ -3193,7 +3196,7 @@ button {
     align-items: flex-start;
   }
   .about-socials__grid {
-    grid-template-columns: repeat(5, 42px);
-    gap: 10px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
   }
 }

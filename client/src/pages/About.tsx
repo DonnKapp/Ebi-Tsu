@@ -8,7 +8,41 @@ import {
   Sparkles,
   Youtube,
 } from "lucide-react";
+import type { SVGProps } from "react";
 import { Link } from "wouter";
+
+function TikTokMark(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...props} aria-hidden="true">
+      <path
+        d="M14.1 4.2v9.15a4.25 4.25 0 1 1-3.1-4.1v2.52a1.8 1.8 0 1 0 .65 1.58V4.2h2.45Z"
+        stroke="#25f4ee"
+        strokeWidth="2.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15.25 5.05c.65 1.32 1.72 2.1 3.25 2.35"
+        stroke="#fe2c55"
+        strokeWidth="2.25"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14.1 4.2v9.15a4.25 4.25 0 1 1-3.1-4.1v2.52a1.8 1.8 0 1 0 .65 1.58V4.2h2.45Z"
+        stroke="#111111"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15.25 5.05c.65 1.32 1.72 2.1 3.25 2.35"
+        stroke="#111111"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 const socials = [
   {
@@ -40,6 +74,12 @@ const socials = [
     detail: "@Ebi_Tsu",
     href: "https://t.me/Ebi_Tsu",
     icon: Send,
+  },
+  {
+    label: "TikTok",
+    detail: "@ebi.tsu",
+    href: "https://www.tiktok.com/@ebi.tsu",
+    icon: TikTokMark,
   },
 ];
 
