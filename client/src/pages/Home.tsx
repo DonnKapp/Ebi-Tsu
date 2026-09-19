@@ -1,20 +1,30 @@
 import { ArrowDown, ArrowUpRight, CircleDot, Waves } from "lucide-react";
-import { Link, useLocation } from "wouter";
-import type { CSSProperties, MouseEvent } from "react";
+import { Link } from "wouter";
+import type { CSSProperties } from "react";
 
 const heroImage = "/assets/ebi-tsu-hero.webp";
 const neoImage = "/assets/ebi-tsu-neocaridina.webp";
 const caridinaImage = "/assets/ebi-tsu-caridina.webp";
 
 export default function Home() {
-  const [, navigate] = useLocation();
+  function resetCollectionRouteScroll() {
+    const root = document.documentElement;
+    const body = document.body;
+    const previousRootBehavior = root.style.scrollBehavior;
+    const previousBodyBehavior = body.style.scrollBehavior;
 
-  function openCollection(event: MouseEvent<HTMLAnchorElement>, path: string) {
-    event.preventDefault();
-    window.history.scrollRestoration = "manual";
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    navigate(path);
+    // This fires before Wouter changes the route. It prevents the previous
+    // collection-card scroll position from being painted on mobile.
+    root.style.scrollBehavior = "auto";
+    body.style.scrollBehavior = "auto";
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        root.style.scrollBehavior = previousRootBehavior;
+        body.style.scrollBehavior = previousBodyBehavior;
+      });
+    });
   }
 
   return (
@@ -108,7 +118,7 @@ export default function Home() {
           <div className="collection-grid">
             <Link
               href="/neocaridina"
-              onClick={event => openCollection(event, "/neocaridina")}
+              onClick={resetCollectionRouteScroll}
               className="collection-card collection-card--neo"
             >
               <img
@@ -135,7 +145,7 @@ export default function Home() {
             </Link>
             <Link
               href="/caridina"
-              onClick={event => openCollection(event, "/caridina")}
+              onClick={resetCollectionRouteScroll}
               className="collection-card collection-card--caridina"
             >
               <img

@@ -46,16 +46,27 @@ type InventoryItem = {
   family: "neocaridina" | "caridina";
   name: string;
   availability: Availability;
+  availability_note: string;
   quantity: number;
   price: number;
   minimum_order: number;
 };
 type InventoryDraft = {
   availability: Availability;
+  availability_note: string;
   quantity: string;
   price: string;
   minimum_order: string;
 };
+type StorefrontSettings = {
+  id: boolean;
+  availability_guidance: string;
+  ordering_guidance: string;
+  shipping_guidance: string;
+  live_arrival_guidance: string;
+  payment_guidance: string;
+};
+type StorefrontDraft = Omit<StorefrontSettings, "id">;
 type View = "inquiries" | "requests";
 
 const availabilityOptions: Availability[] = [
@@ -89,6 +100,7 @@ const requestStatuses: LivestockRequest["status"][] = [
 function toDraft(item: InventoryItem): InventoryDraft {
   return {
     availability: item.availability,
+    availability_note: item.availability_note,
     quantity: String(item.quantity),
     price: String(item.price),
     minimum_order: String(item.minimum_order),
@@ -105,6 +117,11 @@ export default function Admin() {
     null
   );
   const [inventoryNotice, setInventoryNotice] = useState("");
+  const [storefront, setStorefront] = useState<StorefrontSettings | null>(null);
+  const [storefrontDraft, setStorefrontDraft] =
+    useState<StorefrontDraft | null>(null);
+  const [savingStorefront, setSavingStorefront] = useState(false);
+  const [storefrontNotice, setStorefrontNotice] = useState("");
   const [view, setView] = useState<View>("inquiries");
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [requests, setRequests] = useState<LivestockRequest[]>([]);
@@ -142,30 +159,41 @@ export default function Admin() {
   async function loadData() {
     setLoading(true);
     setError("");
-    const [inquiryResult, requestResult, inventoryResult] = await Promise.all([
-      supabase
-        .from("inquiries")
-        .select(
-          "id, name, email, phone, inquiry_type, message, status, created_at"
-        )
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("livestock_requests")
-        .select(
-          "id, selected_line, name, email, phone, species, quantity, shipping_location, notes, status, created_at"
-        )
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("inventory_items")
-        .select(
-          "id, family, name, availability, quantity, price, minimum_order"
-        )
-        .order("family", { ascending: true })
-        .order("sort_order", { ascending: true }),
-    ]);
+    const [inquiryResult, requestResult, inventoryResult, storefrontResult] =
+      await Promise.all([
+        supabase
+          .from("inquiries")
+          .select(
+            "id, name, email, phone, inquiry_type, message, status, created_at"
+          )
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("livestock_requests")
+          .select(
+            "id, selected_line, name, email, phone, species, quantity, shipping_location, notes, status, created_at"
+          )
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("inventory_items")
+          .select(
+            "id, family, name, availability, availability_note, quantity, price, minimum_order"
+          )
+          .order("family", { ascending: true })
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("storefront_settings")
+          .select(
+            "id, availability_guidance, ordering_guidance, shipping_guidance, live_arrival_guidance, payment_guidance"
+          )
+          .eq("id", true)
+          .maybeSingle(),
+      ]);
 
     const loadError =
-      inquiryResult.error || requestResult.error || inventoryResult.error;
+      inquiryResult.error ||
+      requestResult.error ||
+      inventoryResult.error ||
+      storefrontResult.error;
     if (loadError) {
       setError(loadError.message || "Unable to load admin data.");
     } else {
@@ -177,6 +205,20 @@ export default function Admin() {
         Object.fromEntries(
           loadedInventory.map(item => [item.id, toDraft(item)])
         )
+      );
+      const loadedStorefront =
+        storefrontResult.data as StorefrontSettings | null;
+      setStorefront(loadedStorefront);
+      setStorefrontDraft(
+        loadedStorefront
+          ? {
+              availability_guidance: loadedStorefront.availability_guidance,
+              ordering_guidance: loadedStorefront.ordering_guidance,
+              shipping_guidance: loadedStorefront.shipping_guidance,
+              live_arrival_guidance: loadedStorefront.live_arrival_guidance,
+              payment_guidance: loadedStorefront.payment_guidance,
+            }
+          : null
       );
     }
     setLoading(false);
@@ -244,6 +286,13 @@ export default function Admin() {
       return;
     }
 
+    if (!draft.availability_note.trim()) {
+      setError(
+        `${item.name}: add a customer-facing availability note before saving.`
+      );
+      return;
+    }
+
     if (
       (draft.availability === "available" ||
         draft.availability === "limited") &&
@@ -266,13 +315,16 @@ export default function Admin() {
       .from("inventory_items")
       .update({
         availability: draft.availability,
+        availability_note: draft.availability_note.trim(),
         price,
         quantity,
         minimum_order: minimumOrder,
         updated_at: new Date().toISOString(),
       })
       .eq("id", item.id)
-      .select("id, family, name, availability, quantity, price, minimum_order")
+      .select(
+        "id, family, name, availability, availability_note, quantity, price, minimum_order"
+      )
       .single();
 
     if (updateError || !data) {
@@ -291,6 +343,55 @@ export default function Admin() {
       );
     }
     setSavingInventoryId(null);
+  }
+
+  function updateStorefrontDraft(field: keyof StorefrontDraft, value: string) {
+    setStorefrontNotice("");
+    setError("");
+    setStorefrontDraft(current =>
+      current ? { ...current, [field]: value } : current
+    );
+  }
+
+  async function saveStorefrontSettings() {
+    if (!storefront || !storefrontDraft || savingStorefront) return;
+    const requiredFields = Object.values(storefrontDraft).every(value =>
+      value.trim()
+    );
+    if (!requiredFields) {
+      setError("Complete each storefront guidance field before saving.");
+      return;
+    }
+
+    setSavingStorefront(true);
+    setError("");
+    setStorefrontNotice("");
+    const { data, error: updateError } = await supabase
+      .from("storefront_settings")
+      .update({ ...storefrontDraft, updated_at: new Date().toISOString() })
+      .eq("id", storefront.id)
+      .select(
+        "id, availability_guidance, ordering_guidance, shipping_guidance, live_arrival_guidance, payment_guidance"
+      )
+      .single();
+
+    if (updateError || !data) {
+      setError(updateError?.message || "Unable to save storefront guidance.");
+    } else {
+      const saved = data as StorefrontSettings;
+      setStorefront(saved);
+      setStorefrontDraft({
+        availability_guidance: saved.availability_guidance,
+        ordering_guidance: saved.ordering_guidance,
+        shipping_guidance: saved.shipping_guidance,
+        live_arrival_guidance: saved.live_arrival_guidance,
+        payment_guidance: saved.payment_guidance,
+      });
+      setStorefrontNotice(
+        "Storefront guidance was saved and is now visible on the public ordering page."
+      );
+    }
+    setSavingStorefront(false);
   }
 
   const visibleInquiries = useMemo(
@@ -426,6 +527,7 @@ export default function Admin() {
                 const isSaving = savingInventoryId === item.id;
                 const isDirty =
                   draft.availability !== item.availability ||
+                  draft.availability_note !== item.availability_note ||
                   Number(draft.quantity) !== item.quantity ||
                   Number(draft.price) !== Number(item.price) ||
                   Number(draft.minimum_order) !== item.minimum_order;
@@ -512,12 +614,131 @@ export default function Admin() {
                     >
                       <Save size={13} /> {isSaving ? "Saving" : "Save"}
                     </button>
+                    <label className="admin-inventory-row__note">
+                      <small>Public availability note</small>
+                      <textarea
+                        value={draft.availability_note}
+                        onChange={event =>
+                          updateInventoryDraft(
+                            item.id,
+                            "availability_note",
+                            event.target.value
+                          )
+                        }
+                        disabled={isSaving}
+                        rows={2}
+                      />
+                    </label>
                   </div>
                 );
               })}
             </div>
           )}
         </section>
+
+        {storefront && storefrontDraft && (
+          <section className="admin-storefront">
+            <div className="profile-form__heading">
+              <div>
+                <span className="account-panel__eyebrow">
+                  Storefront reference
+                </span>
+                <h2>Ordering guidance</h2>
+              </div>
+              <button
+                className="button button--dark"
+                type="button"
+                disabled={savingStorefront}
+                onClick={() => void saveStorefrontSettings()}
+              >
+                <Save size={14} />{" "}
+                {savingStorefront ? "Saving" : "Save guidance"}
+              </button>
+            </div>
+            <p className="admin-inventory__intro">
+              These five messages appear on the public Ordering & availability
+              page. Keep them clear, current, and honest until final policies
+              are published.
+            </p>
+            {storefrontNotice && (
+              <p className="admin-inventory__success">
+                <Check size={14} /> {storefrontNotice}
+              </p>
+            )}
+            <div className="admin-storefront__grid">
+              <label>
+                <span>Availability</span>
+                <textarea
+                  value={storefrontDraft.availability_guidance}
+                  onChange={event =>
+                    updateStorefrontDraft(
+                      "availability_guidance",
+                      event.target.value
+                    )
+                  }
+                  rows={4}
+                  disabled={savingStorefront}
+                />
+              </label>
+              <label>
+                <span>Ordering</span>
+                <textarea
+                  value={storefrontDraft.ordering_guidance}
+                  onChange={event =>
+                    updateStorefrontDraft(
+                      "ordering_guidance",
+                      event.target.value
+                    )
+                  }
+                  rows={4}
+                  disabled={savingStorefront}
+                />
+              </label>
+              <label>
+                <span>Shipping</span>
+                <textarea
+                  value={storefrontDraft.shipping_guidance}
+                  onChange={event =>
+                    updateStorefrontDraft(
+                      "shipping_guidance",
+                      event.target.value
+                    )
+                  }
+                  rows={4}
+                  disabled={savingStorefront}
+                />
+              </label>
+              <label>
+                <span>Live arrival</span>
+                <textarea
+                  value={storefrontDraft.live_arrival_guidance}
+                  onChange={event =>
+                    updateStorefrontDraft(
+                      "live_arrival_guidance",
+                      event.target.value
+                    )
+                  }
+                  rows={4}
+                  disabled={savingStorefront}
+                />
+              </label>
+              <label>
+                <span>Payment</span>
+                <textarea
+                  value={storefrontDraft.payment_guidance}
+                  onChange={event =>
+                    updateStorefrontDraft(
+                      "payment_guidance",
+                      event.target.value
+                    )
+                  }
+                  rows={4}
+                  disabled={savingStorefront}
+                />
+              </label>
+            </div>
+          </section>
+        )}
 
         <div className="admin-view-switch">
           <button

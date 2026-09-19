@@ -58,6 +58,7 @@ export type Database = {
       inventory_items: {
         Row: {
           availability: string;
+          availability_note: string;
           created_at: string;
           description: string;
           family: string;
@@ -75,6 +76,7 @@ export type Database = {
         };
         Insert: {
           availability?: string;
+          availability_note?: string;
           created_at?: string;
           description?: string;
           family: string;
@@ -92,6 +94,7 @@ export type Database = {
         };
         Update: {
           availability?: string;
+          availability_note?: string;
           created_at?: string;
           description?: string;
           family?: string;
@@ -105,6 +108,36 @@ export type Database = {
           quantity?: number;
           shipping_placeholder?: string;
           sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      storefront_settings: {
+        Row: {
+          availability_guidance: string;
+          id: boolean;
+          live_arrival_guidance: string;
+          ordering_guidance: string;
+          payment_guidance: string;
+          shipping_guidance: string;
+          updated_at: string;
+        };
+        Insert: {
+          availability_guidance: string;
+          id?: boolean;
+          live_arrival_guidance: string;
+          ordering_guidance: string;
+          payment_guidance: string;
+          shipping_guidance: string;
+          updated_at?: string;
+        };
+        Update: {
+          availability_guidance?: string;
+          id?: boolean;
+          live_arrival_guidance?: string;
+          ordering_guidance?: string;
+          payment_guidance?: string;
+          shipping_guidance?: string;
           updated_at?: string;
         };
         Relationships: [];

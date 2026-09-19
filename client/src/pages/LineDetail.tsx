@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowUpRight, LockKeyhole, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, RefreshCw } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -14,6 +14,7 @@ type Line = {
     | "accepting_requests"
     | "out_of_stock"
     | "coming_soon";
+  availability_note: string;
   price: number;
   quantity: number;
   minimum_order: number;
@@ -59,7 +60,7 @@ export default function LineDetail() {
     supabase
       .from("inventory_items")
       .select(
-        "id, family, name, description, availability, price, quantity, minimum_order, image_url, shipping_placeholder, live_arrival_placeholder, payment_placeholder"
+        "id, family, name, description, availability, availability_note, price, quantity, minimum_order, image_url, shipping_placeholder, live_arrival_placeholder, payment_placeholder"
       )
       .eq("id", params.id)
       .maybeSingle()
@@ -164,6 +165,9 @@ export default function LineDetail() {
             >
               <span /> {labels[line.availability]}
             </span>
+            <p className="catalog-detail__availability-note">
+              {line.availability_note}
+            </p>
             <div className="catalog-detail__facts">
               <span>
                 <small>Price</small>
@@ -180,13 +184,6 @@ export default function LineDetail() {
                 {line.minimum_order}
               </span>
             </div>
-            {line.availability === "out_of_stock" && (
-              <p className="catalog-detail__notice">
-                <LockKeyhole size={15} /> This line is currently unavailable.
-                You may still submit a non-binding request for future
-                availability.
-              </p>
-            )}
             <Link
               href={`/livestock-request?line=${line.id}`}
               className="button button--dark"
@@ -205,19 +202,19 @@ export default function LineDetail() {
           <span className="section-label">
             <span>—</span> Before availability
           </span>
-          <div className="catalog-detail__policy-grid">
+          <div className="catalog-detail__policy-intro">
             <div>
-              <h2>Shipping</h2>
-              <p>{line.shipping_placeholder}</p>
+              <h2>Know the process.</h2>
+              <p>
+                Shipping, live-arrival, payment, and ordering terms will be
+                published before live livestock checkout is enabled. Until then,
+                catalog information and requests are designed for thoughtful
+                planning—not purchase or reservation.
+              </p>
             </div>
-            <div>
-              <h2>Live arrival</h2>
-              <p>{line.live_arrival_placeholder}</p>
-            </div>
-            <div>
-              <h2>Payment</h2>
-              <p>{line.payment_placeholder}</p>
-            </div>
+            <Link href="/ordering" className="button button--light">
+              Ordering & availability <ArrowUpRight size={15} />
+            </Link>
           </div>
         </div>
       </section>

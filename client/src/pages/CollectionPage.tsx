@@ -241,6 +241,9 @@ export default function CollectionPage({
               purchase. Prices, quantities, shipping rules, live-arrival policy,
               and payment methods will be finalized before ordering is enabled.
             </p>
+            <Link href="/ordering" className="text-link">
+              Ordering & availability <ArrowUpRight size={14} />
+            </Link>
           </div>
         </div>
       </section>

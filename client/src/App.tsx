@@ -12,6 +12,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const LivestockRequest = lazy(() => import("./pages/LivestockRequest"));
 const LineDetail = lazy(() => import("./pages/LineDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const OrderingAvailability = lazy(() => import("./pages/OrderingAvailability"));
 
 const neoImage = "/assets/ebi-tsu-neocaridina.webp";
 const caridinaImage = "/assets/ebi-tsu-caridina.webp";
@@ -28,8 +29,26 @@ function Router() {
   const [location] = useLocation();
 
   useLayoutEffect(() => {
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    const root = document.documentElement;
+    const body = document.body;
+    const previousRootBehavior = root.style.scrollBehavior;
+    const previousBodyBehavior = body.style.scrollBehavior;
+
+    // The site uses smooth scrolling for in-page anchors. Temporarily opt out
+    // while routes change so collection cards never visibly travel upward.
+    window.history.scrollRestoration = "manual";
+    root.style.scrollBehavior = "auto";
+    body.style.scrollBehavior = "auto";
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+    const restoreFrame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        root.style.scrollBehavior = previousRootBehavior;
+        body.style.scrollBehavior = previousBodyBehavior;
+      });
+    });
+
+    return () => window.cancelAnimationFrame(restoreFrame);
   }, [location]);
 
   return (
@@ -67,6 +86,7 @@ function Router() {
         <Route path="/about" component={About} />
         <Route path="/contact" component={Contact} />
         <Route path="/livestock-request" component={LivestockRequest} />
+        <Route path="/ordering" component={OrderingAvailability} />
         <Route path="/catalog/:id" component={LineDetail} />
         <Route path="/account" component={Account} />
         <Route path="/admin" component={Admin} />
