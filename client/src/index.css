@@ -137,10 +137,6 @@ button {
 .site-header--light .brand-lockup {
   color: var(--ink);
 }
-.site-header:not(.site-header--light) .brand-mark,
-.site-footer .brand-mark {
-  filter: invert(1);
-}
 .brand-lockup {
   display: inline-flex;
   align-items: center;

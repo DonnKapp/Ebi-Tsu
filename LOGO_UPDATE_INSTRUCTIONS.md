@@ -4,10 +4,10 @@ The approved shrimp artwork is now integrated into the shared brand component.
 
 ## Included changes
 
-- Added the approved transparent logo as `client/public/assets/ebi-tsu-logo.webp`.
+- Added the newly approved peach shrimp logo as `client/public/assets/ebi-tsu-logo.webp`.
 - Replaced the temporary inline circular SVG in `client/src/components/BrandMark.tsx`.
 - Updated shared sizing in `client/src/index.css` so the wide shrimp mark works in the header, mobile navigation, and footer.
-- Added automatic light/dark treatment: the logo appears black on light pages and reversed on the dark homepage/footer.
+- Preserved the peach primary color on both light and dark pages, with the existing black-and-white eye, outlines, and egg detail intact.
 
 The full-resolution transparent master PNG remains outside the deployable app package so it can be retained for merchandise and future vector production.
 
