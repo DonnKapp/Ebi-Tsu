@@ -9,6 +9,7 @@ import CollectionPage from "./pages/CollectionPage";
 import Contact from "./pages/Contact";
 import Home from "./pages/Home";
 import LivestockRequest from "./pages/LivestockRequest";
+import LineDetail from "./pages/LineDetail";
 import NotFound from "./pages/NotFound";
 
 const neoImage = "/assets/ebi-tsu-neocaridina.png";
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
       <Route path="/livestock-request" component={LivestockRequest} />
+      <Route path="/catalog/:id" component={LineDetail} />
       <Route path="/account" component={Account} />
       <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
